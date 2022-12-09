@@ -46,6 +46,7 @@ class _BlockControlState extends State<BlockControl> {
         .load(widget.block.blockSet.mediaGenerator.imageList[0]["path"]!);
 
     var decodedImage = await decodeImageFromList(image.buffer.asUint8List());
+
     setState(() {
       widget.block.imageMaxWidth = decodedImage.width.toDouble();
       widget.block.imageHeight = decodedImage.height.toDouble();
@@ -305,6 +306,10 @@ class _BlockControlState extends State<BlockControl> {
               block.size.width + details.delta.dx * (left ? -1 : 1)),
           max(minimumBlockSize,
               block.size.height + details.delta.dy * (up ? -1 : 1)));
+
+      if (widget.block.blockSet.mediaGenerator.imageList.isNotEmpty) {
+        getImageDimensions();
+      }
 
       /// Updating size of image widget
       if (block.imageHeight < block.imageMaxHeight) {

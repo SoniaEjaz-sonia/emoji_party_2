@@ -70,6 +70,9 @@ class _BlockWidgetState extends State<BlockWidget>
 
   @override
   Widget build(BuildContext context) {
+    if (block.blockSet.mediaGenerator.imageList.isNotEmpty &&
+        block.media.mediaType == "image") getMimeType();
+
     return Material(
       /// Stops any text being red. Needs to be after opacity.
       child: Container(
