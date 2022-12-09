@@ -37,6 +37,7 @@ class _EmojiDrawerState extends State<EmojiDrawer>
   /// Boolean value to check if search string exist
   bool imageExist = true;
   bool emojiExist = true;
+  bool isLoading = false;
 
   /// Renders gif image
   /// [i-e] Will only draw first frame of gif image if
@@ -52,7 +53,28 @@ class _EmojiDrawerState extends State<EmojiDrawer>
     /// Gif controllers
     controller = FlutterGifController(vsync: this);
 
+    // getDelayedDuration();
+
     super.initState();
+  }
+
+  getDelayedDuration() async {
+    setState(() {
+      isLoading = true;
+    });
+    await Future.delayed(const Duration(seconds: 5), () {
+      print("Executed after 5 seconds");
+    }).then((value) {
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+
+  Future<String> getData() {
+    return Future.delayed(const Duration(seconds: 1), () {
+      return "";
+    });
   }
 
   @override
@@ -187,61 +209,97 @@ class _EmojiDrawerState extends State<EmojiDrawer>
                     )
                   : Container(),
 
-              /// Listing images on top of emoji list
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  emojiExist
-                      ? const Padding(
-                          padding: EdgeInsets.only(
-                              left: 25.0, top: 8.0, bottom: 12.0),
-                          child: Text(
-                            'Emojis',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        )
-                      : const SizedBox(),
-                  Column(
-                    /// for all the available emojis
-                    children: widget.mediaGenerator
-                        .emojisMatchingSearchString()
-                        .map(
-                          (emoji) =>
+              /// Emoji list is taking time to load
+              /// causing drawer to stuck on home screen
+              /// delay in [mediaGenerator.emojisMatchingSearchString()]
+              /// to load drawer faster
+              FutureBuilder(
+                future: getData(),
+                builder: (ctx, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.connectionState == snapshot.connectionState) {}
+                    // If we got an error
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          '${snapshot.error} occurred',
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                      );
 
-                              /// Make a clickable row
-                              InkWell(
-                            onTap: () {
-                              widget.callback(emoji.key, "", "");
+                      // if we got our data
+                    } else if (snapshot.hasData) {
+                      // Extracting data from snapshot object
+                      final data = snapshot.data as String;
+                      return
 
-                              // close the drawer
-                              if (widget.closeDrawerOnSelect) {
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 100,
-                                  height: 50,
-                                  child: FittedBox(
-                                    fit: BoxFit.contain,
-                                    child: Text(emoji.value),
+                          /// Listing images on top of emoji list
+                          Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          emojiExist
+                              ? const Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 25.0, top: 8.0, bottom: 12.0),
+                                  child: Text(
+                                    'Emojis',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Text(emoji.key),
                                 )
-                              ],
-                            ),
+                              : const SizedBox(),
+                          Column(
+                            /// for all the available emojis
+                            children: widget.mediaGenerator
+                                .emojisMatchingSearchString()
+                                .map(
+                                  (emoji) =>
+
+                                      /// Make a clickable row
+                                      InkWell(
+                                    onTap: () {
+                                      widget.callback(emoji.key, "", "");
+
+                                      // close the drawer
+                                      if (widget.closeDrawerOnSelect) {
+                                        Navigator.pop(context);
+                                      }
+                                    },
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 100,
+                                          height: 50,
+                                          child: FittedBox(
+                                            fit: BoxFit.contain,
+                                            child: Text(emoji.value),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(emoji.key),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           ),
-                        )
-                        .toList(),
-                  ),
-                ],
+                        ],
+                      );
+                    }
+                  }
+                  return Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Center(
+                      child: emojiExist
+                          ? CircularProgressIndicator()
+                          : Container(),
+                    ),
+                  );
+                },
               ),
 
               /// If case of empty media
